@@ -69,7 +69,7 @@ void main(void)
     int pw = int(gl_GlobalInvocationID.x);
     int ph = int(gl_GlobalInvocationID.y);
     int c = int(gl_GlobalInvocationID.z);
-    vec4 roi = LOAD_UNPACK4_CURRENT_ITEM_HALF(rois_ptr, rois_iter);
+    vec4 roi = LOAD_UNPACK4_CURRENT_ITEM_HALF(rois_ptr, rois_iter + 1);
     vec4 roi_scaled = roi * SPATIAL_SCALE;
     float roi_start_w = roi_scaled[0];
     float roi_start_h = roi_scaled[1];

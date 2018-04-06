@@ -88,7 +88,7 @@ void GCROIAlignKernel::configure(const IGCTensor *input, IGCTensor *output, cons
 
     AccessWindowStatic     input_access(input->info(), 0, 0, input->info()->dimension(0), input->info()->dimension(1));
     AccessWindowHorizontal output_access(output->info(), 0, num_elems_processed_per_iteration);
-    AccessWindowStatic rois_access(rois->info(), 0, 0, rois->info()->dimension(0), rois->info()->dimension(1));
+    AccessWindowHorizontal rois_access(rois->info(), 0, 0, 5);
 
     update_window_and_padding(win, input_access, output_access, rois_access);
 
@@ -106,7 +106,6 @@ void GCROIAlignKernel::run(const Window &window)
 
     Window slice    = window.first_slice_window_3D();
     Window slice_in = window.first_slice_window_3D();
-
     Window slice_roi = window.first_slice_window_1D();
 
     unsigned int idx2 = 2 * num_arguments_per_3D_tensor();
