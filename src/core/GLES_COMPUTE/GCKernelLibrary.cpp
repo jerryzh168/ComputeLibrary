@@ -226,6 +226,7 @@ const std::map<std::string, std::string> GCKernelLibrary::_shader_program_map =
     { "scale_nearest_neighbour", "scale.cs" },
     { "arithmetic_add", "arithmetic_add.cs" },
     { "depthwise_convolution_3x3", "depthwise_convolution3x3.cs" },
+    { "roi_align", "roi_align.cs" },
 };
 
 const std::map<std::string, std::string> GCKernelLibrary::_program_source_map =
@@ -314,6 +315,10 @@ const std::map<std::string, std::string> GCKernelLibrary::_program_source_map =
     {
         "depthwise_convolution3x3.cs",
 #include "./cs_shaders/depthwise_convolution3x3.csembed"
+    },
+    {
+        "roi_align.cs",
+#include "./cs_shaders/roi_align.csembed"
     },
 #endif /* EMBEDDED_KERNELS */
 };
