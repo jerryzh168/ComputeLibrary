@@ -56,7 +56,7 @@ SHADER_PARAMS_DECLARATION
 
 #ifdef DATA_TYPE_FP32
 #error "RoIAlign for FP32 Not Implemented"
-#if defined(DATA_TYPE_FP16)
+#elif defined(DATA_TYPE_FP16)
 TENSOR_DECLARATION(1, srcBuffer, uvec2, src_ptr, src_shift, 3, readonly);
 TENSOR_DECLARATION(2, dstBuffer, uvec2, dst_ptr, dst_shift, 3, writeonly);
 TENSOR_DECLARATION(3, roisBuffer, uvec2, rois_ptr, rois_shift, 3, readonly);
@@ -87,8 +87,8 @@ void main(void)
     float count = roi_bin_grid_h * roi_bin_grid_w;
 
     float res = 0;
-    int height = 0; // height of src image
-    int widht = 0; // width of src image
+    int height = IN_HEIGHT; // height of src image
+    int widht = IN_WIDTH; // width of src image
     for (int iy = 0; iy < iy_upper; ++iy) {
         for (int ix = 0; ix < ix_upper; ++ix) {
             float y = roi_start_h + ph * bin_size_h + (iy + 0.5) * bin_size_h / float(roi_bin_grid_h);
@@ -137,3 +137,6 @@ void main(void)
     // Store result
     STORE_CURRENT_ITEM(dst_ptr, dst_iter, res);
 }
+#else
+#error "Unrecognized DataType"
+#endif

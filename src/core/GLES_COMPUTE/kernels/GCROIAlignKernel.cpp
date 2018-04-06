@@ -74,6 +74,8 @@ void GCROIAlignKernel::configure(const IGCTensor *input, IGCTensor *output, cons
     build_opts.emplace(("#define POOLED_H " + support::cpp11::to_string(_pooled_h)));
     build_opts.emplace(("#define POOLED_W " + support::cpp11::to_string(_pooled_w)));
     build_opts.emplace(("#define SAMPLING_RATIO " + support::cpp11::to_string(_sampling_ratio)));
+    build_opts.emplace(("#define IN_HEIGHT " + support::cpp11::to_string(input->info()->dimension(1))));
+    build_opts.emplace(("#define IN_WIDTH " + support::cpp11::to_string(input->info()->dimension(0))));
     build_opts.emplace(("#define LOCAL_SIZE_X " + support::cpp11::to_string(1)));
     build_opts.emplace(("#define LOCAL_SIZE_Y " + support::cpp11::to_string(1)));
     build_opts.emplace(("#define LOCAL_SIZE_Z " + support::cpp11::to_string(1)));
