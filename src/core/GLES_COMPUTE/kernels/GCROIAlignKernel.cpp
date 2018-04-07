@@ -63,7 +63,8 @@ void GCROIAlignKernel::configure(const IGCTensor *input, IGCTensor *output, cons
     unsigned int num_elems_processed_per_iteration = 1;
     if(input->info()->data_type() == DataType::F16)
     {
-        num_elems_processed_per_iteration = 4;
+      // TODO
+      num_elems_processed_per_iteration = 1;
     }
 
     // Set build options
@@ -87,7 +88,7 @@ void GCROIAlignKernel::configure(const IGCTensor *input, IGCTensor *output, cons
     Window win = calculate_max_window(*output->info(), Steps(num_elems_processed_per_iteration));
 
     AccessWindowStatic     input_access(input->info(), 0, 0, input->info()->dimension(0), input->info()->dimension(1));
-    AccessWindowHorizontal output_access(output->info(), 0, num_elems_processed_per_iteration);
+    AccessWindowStatic output_access(output->info(), 0, 0, output->info()->dimension(0), output->info()->dimension(1));
     AccessWindowHorizontal rois_access(rois->info(), 0, 0, 5);
 
     update_window_and_padding(win, input_access, output_access, rois_access);

@@ -55,44 +55,44 @@ SHADER_PARAMS_DECLARATION
 };
 
 #ifdef DATA_TYPE_FP32
-#error "RoIAlign for FP32 Not Implemented"
+#error RoIAlign for FP32 Not Implemented
 #elif defined(DATA_TYPE_FP16)
-TENSOR_DECLARATION(1, srcBuffer, uvec2, src_ptr, src_shift, 3, readonly);
-TENSOR_DECLARATION(2, dstBuffer, uvec2, dst_ptr, dst_shift, 3, writeonly);
-TENSOR_DECLARATION(3, roisBuffer, uvec2, rois_ptr, rois_shift, 3, readonly);
+TENSOR_DECLARATION(1, srcBuffer, uvec2, src_ptr, src_shift, 1, readonly);
+TENSOR_DECLARATION(2, dstBuffer, uvec2, dst_ptr, dst_shift, 1, writeonly);
+TENSOR_DECLARATION(3, roisBuffer, uvec2, rois_ptr, rois_shift, 1, readonly);
 void main(void)
 {
     Tensor3DIterator src_iter   = CONVERT_TO_TENSOR3D_ITERATOR(src_attrs, src_shift);
     Tensor3DIterator dst_iter   = CONVERT_TO_TENSOR3D_ITERATOR(dst_attrs, dst_shift);
     VectorIterator   rois_iter  = CONVERT_TO_VECTOR_ITERATOR(rois_attrs, rois_shift);
 
-    int pw = int(gl_GlobalInvocationID.x);
-    int ph = int(gl_GlobalInvocationID.y);
-    int c = int(gl_GlobalInvocationID.z);
+    uint pw = gl_GlobalInvocationID.x;
+    uint ph = gl_GlobalInvocationID.y;
+    uint c = gl_GlobalInvocationID.z;
     vec4 roi = LOAD_UNPACK4_CURRENT_ITEM_HALF(rois_ptr, rois_iter + 1);
-    vec4 roi_scaled = roi * SPATIAL_SCALE;
-    float roi_start_w = roi_scaled[0];
-    float roi_start_h = roi_scaled[1];
-    float roi_end_w = roi_scaled[2];
-    float roi_end_h = roi_scaled[3];
+    vec4 roi_scaled = SPATIAL_SCALE * roi;
+    float roi_start_w = 0;//roi_scaled.x;
+    float roi_start_h = 0;//roi_scaled.y;
+    float roi_end_w = 1;//roi_scaled.z;
+    float roi_end_h = 1;//roi_scaled.w;
 
-    float roi_width = std::max(roi_end_w - roi_start_w, (float)1.);
-    float roi_height = std::max(roi_end_h - roi_start_h, (T)1.);
-    float bin_size_h = roi_height / static_cast<float>(POOLED_H);
-    float bin_size_w = roi_width / static_cast<float>(POOLED_W);
+    float roi_width = max(roi_end_w - roi_start_w, 1.0);
+    float roi_height = max(roi_end_h - roi_start_h, 1.0);
+    float bin_size_h = roi_height / float(POOLED_H);
+    float bin_size_w = roi_width / float(POOLED_W);
 
     int iy_upper = (SAMPLING_RATIO > 0) ? SAMPLING_RATIO : ceil(roi_height / POOLED_H);
     int ix_upper = (SAMPLING_RATIO > 0) ? SAMPLING_RATIO : ceil(roi_width / POOLED_W);
 
-    float count = roi_bin_grid_h * roi_bin_grid_w;
+    float count = ix_upper * iy_upper;
 
     float res = 0;
     int height = IN_HEIGHT; // height of src image
-    int widht = IN_WIDTH; // width of src image
+    int width = IN_WIDTH; // width of src image
     for (int iy = 0; iy < iy_upper; ++iy) {
         for (int ix = 0; ix < ix_upper; ++ix) {
-            float y = roi_start_h + ph * bin_size_h + (iy + 0.5) * bin_size_h / float(roi_bin_grid_h);
-            float x = roi_start_w + pw * bin_size_w + (ix + 0.5) * bin_size_w / float(roi_bin_grid_w);
+            float y = roi_start_h + ph * bin_size_h + (iy + 0.5) * bin_size_h / float(iy_upper);
+            float x = roi_start_w + pw * bin_size_w + (ix + 0.5) * bin_size_w / float(ix_upper);
             if (y < -1.0 || y > height || x < -1.0 || x > width) {
                continue;
             }
@@ -103,19 +103,19 @@ void main(void)
                x = 0;
             }
 
-            int y_low = (int)y;
-            int x_low = (int)x;
+            int y_low = int(y);
+            int x_low = int(x);
             int y_high, x_high;
             if (y_low >= height - 1) {
               y_high = y_low = height - 1;
-              y = (float)y_low;
+              y = float(y_low);
             } else {
               y_high = y_low + 1;
             }
 
             if (x_low >= width - 1) {
               x_high = x_low = width - 1;
-              x = (float)x_low;
+              x = float(x_low);
             } else {
               x_high = x_low + 1;
             }
@@ -138,5 +138,5 @@ void main(void)
     STORE_CURRENT_ITEM(dst_ptr, dst_iter, res);
 }
 #else
-#error "Unrecognized DataType"
+#error Unrecognized DataType
 #endif

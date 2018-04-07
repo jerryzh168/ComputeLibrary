@@ -51,15 +51,25 @@ public:
     // [TODO] Update Docs
     /** Set the input and output tensors.
      *
-     * @param[in]  input    Source tensor. 3 lower dimensions represent a single input with dimensions [width, height, FM].
-     *                      The rest are optional and used for representing batches. Data types supported: F16/F32.
-     * @param[out] output   Destination tensor. Output will have the same number of dimensions as input. Data type supported: same as @p input
-     * @param[in]  mean     Mean values tensor. 1 dimension with size equal to the feature maps [FM]. Data types supported: Same as @p input
-     * @param[in]  var      Variance values tensor. 1 dimension with size equal to the feature maps [FM]. Data types supported: Same as @p input
-     * @param[in]  beta     Beta values tensor. 1 dimension with size equal to the feature maps [FM]. Data types supported: Same as @p input
-     * @param[in]  gamma    Gamma values tensor. 1 dimension with size equal to the feature maps [FM]. Data types supported: Same as @p input
-     * @param[in]  epsilon  Small value to avoid division with zero.
-     * @param[in]  act_info (Optional) Activation layer information in case of a fused activation. Only RELU, BOUNDED_RELU and LU_BOUNDED_RELU supported.
+     * @param[in]  input    Source tensor. 3 lower dimensions represent a single input with dimensions [width, height, FM]. batch size should be 1
+     *                      The rest are optional and used for representing batches. Data types supported: F16.
+     * @param[out] output   Destination tensor. 4D output of shape [pooled_h, pooled_w, FM, R]. The r-th batch element "
+     *  "is a pooled feature map cooresponding to the r-th RoI. Data type supported: same as @p input
+     * @param[in]  rois     ROIs tensor. 2D input of shape (R, 4 or 5) specifying R RoIs "
+     *   "representing: batch index in [0, N - 1], x1, y1, x2, y2. The RoI "
+     *   "coordinates are in the coordinate system of the input image. For "
+     *   "inputs corresponding to a single image, batch index can be excluded "
+     *  "to have just 4 columns. Data types supported: Same as @p input
+     * @param[in]  spatial_scale  (float) default 1.0; Spatial scale of the input feature map X "
+     *  "relative to the input image. E.g., 0.0625 if X has a stride of 16 "
+     *  "w.r.t. the input image
+     * @param[in] pooled_h (int) default 1; Pooled output Y's height.
+     * @param[in] pooled_w (int) default 1; Pooled output Y's width.
+     * @param[in] sampling_ratio "(int) default -1; number of sampling points in the interpolation grid "
+     *  "used to compute the output value of each pooled output bin. If > 0, "
+     *  "then exactly sampling_ratio x sampling_ratio grid points are used. If "
+     *  "<= 0, then an adaptive number of grid points are used (computed as "
+     *  "ceil(roi_width / pooled_w), and likewise for height)."
      */
     void configure(const IGCTensor *input, IGCTensor *output, const IGCTensor *rois, float spatial_scale, int pooled_h, int pooled_w, int sampling_ratio);
 
