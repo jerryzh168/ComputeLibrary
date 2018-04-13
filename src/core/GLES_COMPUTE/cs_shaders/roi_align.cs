@@ -68,66 +68,67 @@ void main(void)
 
     uint pw = gl_GlobalInvocationID.x;
     uint ph = gl_GlobalInvocationID.y;
-    uint c = gl_GlobalInvocationID.z;
-    vec4 roi = LOAD_UNPACK4_CURRENT_ITEM_HALF(rois_ptr, rois_iter + 1);
+    //uint c = gl_GlobalInvocationID.z;
+    uint c = 0U;
+    vec4 roi = LOAD_UNPACK4_HALF(rois_ptr, VECTOR_OFFSET(rois_iter, 0));
     vec4 roi_scaled = SPATIAL_SCALE * roi;
-    float roi_start_w = 0;//roi_scaled.x;
-    float roi_start_h = 0;//roi_scaled.y;
-    float roi_end_w = 1;//roi_scaled.z;
-    float roi_end_h = 1;//roi_scaled.w;
+    float roi_start_w = 0.0;//roi_scaled.x;
+    float roi_start_h = 0.0;//roi_scaled.y;
+    float roi_end_w = 1.0;//roi_scaled.z;
+    float roi_end_h = 1.0;//roi_scaled.w;
 
     float roi_width = max(roi_end_w - roi_start_w, 1.0);
     float roi_height = max(roi_end_h - roi_start_h, 1.0);
     float bin_size_h = roi_height / float(POOLED_H);
     float bin_size_w = roi_width / float(POOLED_W);
 
-    int iy_upper = (SAMPLING_RATIO > 0) ? SAMPLING_RATIO : ceil(roi_height / POOLED_H);
-    int ix_upper = (SAMPLING_RATIO > 0) ? SAMPLING_RATIO : ceil(roi_width / POOLED_W);
+    int iy_upper = (SAMPLING_RATIO > 0) ? SAMPLING_RATIO : int(ceil(roi_height / float(POOLED_H)));
+    int ix_upper = (SAMPLING_RATIO > 0) ? SAMPLING_RATIO : int(ceil(roi_width / float(POOLED_W)));
 
-    float count = ix_upper * iy_upper;
+    float count = float(ix_upper * iy_upper);
 
-    float res = 0;
-    int height = IN_HEIGHT; // height of src image
-    int width = IN_WIDTH; // width of src image
+    float res = 0.0;
+    float height = float(IN_HEIGHT); // height of src image
+    float width = float(IN_WIDTH); // width of src image
     for (int iy = 0; iy < iy_upper; ++iy) {
         for (int ix = 0; ix < ix_upper; ++ix) {
-            float y = roi_start_h + ph * bin_size_h + (iy + 0.5) * bin_size_h / float(iy_upper);
-            float x = roi_start_w + pw * bin_size_w + (ix + 0.5) * bin_size_w / float(ix_upper);
+            float y = roi_start_h + float(ph) * bin_size_h + (float(iy) + 0.5) * bin_size_h / float(iy_upper);
+            float x = roi_start_w + float(pw) * bin_size_w + (float(ix) + 0.5) * bin_size_w / float(ix_upper);
             if (y < -1.0 || y > height || x < -1.0 || x > width) {
                continue;
             }
-            if (y <= 0) {
-               y = 0;
+            if (y <= 0.0) {
+               y = 0.0;
             }
-            if (x <= 0) {
-               x = 0;
+            if (x <= 0.0) {
+               x = 0.0;
             }
 
             int y_low = int(y);
             int x_low = int(x);
             int y_high, x_high;
-            if (y_low >= height - 1) {
-              y_high = y_low = height - 1;
+            if (y_low >= int(height) - 1) {
+              y_high = y_low = int(height) - 1;
               y = float(y_low);
             } else {
               y_high = y_low + 1;
             }
 
-            if (x_low >= width - 1) {
-              x_high = x_low = width - 1;
+            if (x_low >= int(width) - 1) {
+              x_high = x_low = int(width) - 1;
               x = float(x_low);
             } else {
               x_high = x_low + 1;
             }
 
-            float ly = y - y_low;
-            float lx = x - x_low;
-            float hy = 1. - ly, hx = 1. - lx;
+            float ly = y - float(y_low);
+            float lx = x - float(x_low);
+            float hy = 1.0 - ly, hx = 1.0 - lx;
             float w1 = hy * hx, w2 = hy * lx, w3 = ly * hx, w4 = ly * lx;
-            float data1 = LOAD(src_ptr, TENSOR3D_OFFSET(src_iter, x_low, y_low, c));
-            float data2 = LOAD(src_ptr, TENSOR3D_OFFSET(src_iter, x_high, y_low, c));
-            float data3 = LOAD(src_ptr, TENSOR3D_OFFSET(src_iter, x_low, y_high, c));
-            float data4 = LOAD(src_ptr, TENSOR3D_OFFSET(src_iter, x_high, y_high, c));
+            float data1 = LOAD_UNPACK2_HALF(src_ptr, TENSOR3D_OFFSET(src_iter, x_low, y_low, c)).x;
+            float data2 = LOAD_UNPACK2_HALF(src_ptr, TENSOR3D_OFFSET(src_iter, x_high, y_low, c)).x;
+            float data3 = LOAD_UNPACK2_HALF(src_ptr, TENSOR3D_OFFSET(src_iter, x_low, y_high, c)).x;
+            float data4 = LOAD_UNPACK2_HALF(src_ptr, TENSOR3D_OFFSET(src_iter, x_high, y_high, c)).x;
             // TODO: vector?
             res += data1 * w1 + data2 * w2 + data3 * w3 + data4 * w4;
         }
@@ -135,7 +136,7 @@ void main(void)
     res /= count;
 
     // Store result
-    STORE_CURRENT_ITEM(dst_ptr, dst_iter, res);
+    STORE(dst_ptr, TENSOR3D_OFFSET(dst_iter, 0, 0, 0), uvec2(uint(res), 0));
 }
 #else
 #error Unrecognized DataType
