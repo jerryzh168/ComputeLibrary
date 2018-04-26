@@ -56,7 +56,7 @@ public:
      * @param[in]  input The input tensor. Data type: FP16.
      * @param[out] output The output tensor. Data type: FP16.
      */
-    void configure(const ICLTensor *input, ICLTensor *output, int group);
+    void configure(const ICLTensor *input, ICLTensor *output, int groups);
 
     // Inherited methods overridden:
     void run(const Window &window, cl::CommandQueue &queue) override;
@@ -64,7 +64,6 @@ public:
 private:
     const ICLTensor     *_input;
     ICLTensor           *_output;
-    int                  _group;
 };
 } // namespace arm_compute
 #endif /* __ARM_COMPUTE_CLCHANNELSHUFFLEKERNEL_H__ */

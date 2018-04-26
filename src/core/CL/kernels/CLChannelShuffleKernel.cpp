@@ -44,27 +44,27 @@ CLChannelShuffleKernel::CLChannelShuffleKernel()
 {
 }
 
-void CLChannelShuffleKernel::configure(const ICLTensor *input, ICLTensor *output, int group)
+void CLChannelShuffleKernel::configure(const ICLTensor *input, ICLTensor *output, int groups)
 {
-    ARM_COMPUTE_ERROR_ON_DATA_TYPE_CHANNEL_NOT_IN(input, 1, DataType::S16);
-    ARM_COMPUTE_ERROR_ON_DATA_TYPE_CHANNEL_NOT_IN(output, 1,DataType::S16);
+    ARM_COMPUTE_ERROR_ON_DATA_TYPE_CHANNEL_NOT_IN(input, 1, DataType::FP16);
+    ARM_COMPUTE_ERROR_ON_DATA_TYPE_CHANNEL_NOT_IN(output, 1,DataType::FP16);
+    ARM_COMPUTE_ERROR_ON(groups < 1);
+    int channels = _input->info()->dimension(2);
+    ARM_COMPUTE_ERROR_ON(channels % groups != 0);
+    int out_channels = _output->info()->dimension(2);
+    ARM_COMPUTE_ERROR_ON(channels != out_channels);
 
     _input = input;
     _output = output;
-    _group = group;
 
     // Set kernel build options
-    std::set<std::string> build_opts;
-    build_opts.insert("-DDATA_TYPE=" + get_cl_type_from_data_type(input->info()->data_type()));
+    CLBuildOptions build_opts;
+    build_opts.add_option("-DDATA_TYPE=" + get_cl_type_from_data_type(input->info()->data_type()));
+    build_opts.add_option("-DGROUP=" + support::cpp11::to_string(groups));
+    build_opts.add_option("-DK=" + support::cpp11::to_string(channels / groups));
 
     // Create kernel
     _kernel = static_cast<cl::Kernel>(CLKernelLibrary::get().create_kernel("channel_shuffle", build_opts));
-
-    unsigned int idx = num_arguments_per_3D_tensor() * 2;
-    int channels = _input->info()->dimension(2);
-    _kernel.setArg<cl_int>(idx++, channels);
-    _kernel.setArg<cl_int>(idx++, _group);
-
 
     // Configure kernel window
     constexpr unsigned int num_elems_processed_per_iteration = 4;

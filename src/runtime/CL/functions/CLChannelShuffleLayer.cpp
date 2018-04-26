@@ -29,9 +29,9 @@
 
 using namespace arm_compute;
 
-void CLChannelShuffleLayer::configure(const ICLTensor *input, ICLTensor *output, int group)
+void CLChannelShuffleLayer::configure(const ICLTensor *input, ICLTensor *output, int groups)
 {
     auto k = arm_compute::support::cpp14::make_unique<CLChannelShuffleKernel>();
-    k->configure(input, output, group);
+    k->configure(input, output, groups);
     _kernel = std::move(k);
 }

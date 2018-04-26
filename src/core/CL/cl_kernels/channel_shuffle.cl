@@ -41,24 +41,19 @@
 * @param[in]  output_stride_z                      Stride of the destination tensor in Z dimension (in bytes)
 * @param[in]  output_step_z                        output_stride_z * number of elements along Z processed per workitem(in bytes)
 * @param[in]  output_offset_first_element_in_bytes The offset of the first element in the destination tensor
-* @param[in]  channels      number of channels
-* @param[in]  group         channel groups
 */
 __kernel void channel_shuffle(
                               TENSOR3D_DECLARATION(in),
-                              TENSOR3D_DECLARATION(out),
-                              const int channels,
-                              const int group)
+                              TENSOR3D_DECLARATION(out))
 {
-  // channel C = G x C' to C' x G
+  // transpose channel C = G x K to K x G
   Tensor3D in  = CONVERT_TO_TENSOR3D_STRUCT_NO_STEP(in);
   Tensor3D out = CONVERT_TO_TENSOR3D_STRUCT(out);
   const int current_c = get_global_id(2); // channel id of output
-  const int K = channels / group;
-  const int g = current_c / group; // group id
-  const int k = current_c % group; // channel id
+  const int g = current_c / GROUP; // group id
+  const int k = current_c % GROUP; // channel id
   // Transpose: (g, k) -> (k, g)
   const int channel_in = k * K + g;
   const float8 coord = get_current_coords();
-  vstore4(read_texels4(&in, convert_int8(coord), channel_in, (__global DATA_TYPE *)out.ptr);
+  vstore4(read_texels4(&in, convert_int8(coord)), channel_in, (__global DATA_TYPE *)out.ptr);
 }

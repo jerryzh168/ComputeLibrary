@@ -32,9 +32,9 @@ class ICLTensor;
 
 /** Basic function to run @ref CLChannelShuffleLayer
  *
- * @note The tensor data types for the inputs must be S16.
+ * @note The tensor data types for the inputs must be FP16.
  * @note The function performs a channel shuffle operation on the input tensor. given NCHW tensor with group G, it will
- * first dive the channels into G groups, C = (G * C'), and perform a transpose of the channel, which gives C = (C' * G).
+ * first divide the channels into G groups, C = (G * C'), and perform a transpose of the channel, which gives C = (C' * G).
  * for more details see: https://arxiv.org/pdf/1707.01083.pdf
  */
 class CLChannelShuffleLayer : public ICLSimpleFunction
@@ -42,10 +42,10 @@ class CLChannelShuffleLayer : public ICLSimpleFunction
 public:
     /** Initialize the function
      *
-     * @param[in]  input Input tensor. Data types supported: S16
-     * @param[out] output Output tensor. Data types supported: S16
+     * @param[in]  input Input tensor. Data types supported: FP16
+     * @param[out] output Output tensor. Data types supported: same as @p input
      */
-  void configure(const ICLTensor *input, ICLTensor *output, int group);
+  void configure(const ICLTensor *input, ICLTensor *output, int groups);
 };
 }
 #endif /* __ARM_COMPUTE_CLCHANNELSHUFFLELAYER_H__ */
